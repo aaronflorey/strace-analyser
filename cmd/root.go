@@ -40,7 +40,7 @@ func newRootCommand() *cobra.Command {
 	root.PersistentFlags().BoolVar(&jsonOut, "json", false, "print full parsed report as JSON")
 
 	root.AddCommand(&cobra.Command{
-		Use:   "all <trace-dir>",
+		Use:   "all <trace-path>",
 		Short: "Show all report sections",
 		Args:  cobra.ExactArgs(1),
 		RunE:  runAll,
@@ -76,7 +76,7 @@ type sectionPrinter func(rep *model.Report, top int, minBytes int64)
 
 func newSectionCommand(name, short string, print sectionPrinter) *cobra.Command {
 	return &cobra.Command{
-		Use:   name + " <trace-dir>",
+		Use:   name + " <trace-path>",
 		Short: short,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

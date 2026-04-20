@@ -36,6 +36,24 @@ var (
 )
 
 func AnalyzeDir(dir string) (*model.Report, error) {
+	info, err := os.Stat(dir)
+	if err != nil {
+		return nil, fmt.Errorf("stat %q: %w", dir, err)
+	}
+
+	if !info.IsDir() {
+		name := filepath.Base(dir)
+		if !isTraceFileName(name) {
+			return nil, fmt.Errorf("trace input %q does not look like a strace output file", dir)
+		}
+		report := model.NewReport()
+		if err := parseFile(dir, parsePIDFromName(name), report); err != nil {
+			return nil, fmt.Errorf("parse %q: %w", dir, err)
+		}
+		report.ParsedFiles = 1
+		return report, nil
+	}
+
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("read directory %q: %w", dir, err)
@@ -47,10 +65,7 @@ func AnalyzeDir(dir string) (*model.Report, error) {
 			continue
 		}
 		name := entry.Name()
-		if strings.HasPrefix(name, ".") {
-			continue
-		}
-		if !(strings.Contains(name, "strace") || strings.HasSuffix(name, ".trace")) {
+		if !isTraceFileName(name) {
 			continue
 		}
 		pid := parsePIDFromName(name)
@@ -62,9 +77,17 @@ func AnalyzeDir(dir string) (*model.Report, error) {
 	}
 
 	if report.ParsedFiles == 0 {
-		return nil, fmt.Errorf("no strace-like files found in %q", dir)
+		return nil, fmt.Errorf("no strace-like files found in %q (expected names like strace.*, *.trace, or trace.*)", dir)
 	}
 	return report, nil
+}
+
+func isTraceFileName(name string) bool {
+	if strings.HasPrefix(name, ".") {
+		return false
+	}
+	lower := strings.ToLower(name)
+	return strings.Contains(lower, "strace") || strings.HasSuffix(lower, ".trace") || strings.HasPrefix(lower, "trace.")
 }
 
 func parseFile(path string, pid int, report *model.Report) error {

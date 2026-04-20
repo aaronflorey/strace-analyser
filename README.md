@@ -55,10 +55,11 @@ Capture traces with the recommended flags first:
 strace -f -T -ttt -o trace.out <command>
 ```
 
-Run all report sections:
+Run all report sections (directory or single trace file):
 
 ```bash
 strace-analyser all /path/to/trace-dir
+strace-analyser all /path/to/trace.out
 ```
 
 Run a single section:
@@ -69,16 +70,16 @@ strace-analyser files /path/to/trace-dir
 
 ### Commands
 
-- `all <trace-dir>`
-- `files <trace-dir>`
-- `network <trace-dir>`
-- `locks <trace-dir>`
-- `errors <trace-dir>`
-- `process <trace-dir>`
-- `metadata <trace-dir>`
-- `poll <trace-dir>`
-- `memory <trace-dir>`
-- `ipc <trace-dir>`
+- `all <trace-path>`
+- `files <trace-path>`
+- `network <trace-path>`
+- `locks <trace-path>`
+- `errors <trace-path>`
+- `process <trace-path>`
+- `metadata <trace-path>`
+- `poll <trace-path>`
+- `memory <trace-path>`
+- `ipc <trace-path>`
 
 ### Global flags
 
