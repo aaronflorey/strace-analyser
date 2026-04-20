@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+project_name: strace-analyser
+
+builds:
+  - id: strace-analyser
+    main: ./main.go
+    binary: strace-analyser
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+brews:
+  - name: strace-analyser
+    repository:
+      owner: aaronflorey
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://github.com/aaronflorey/strace-analyser
+    description: Analyze a directory of strace outputs.
+    license: MIT
+    install: |
+      bin.install "strace-analyser"
+    test: |
+      system "#{bin}/strace-analyser", "--help"
