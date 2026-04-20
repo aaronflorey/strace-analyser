@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -30,6 +32,14 @@ func TestRootCommandsUseTracePathArgName(t *testing.T) {
 		if !strings.Contains(sub.Use, "<trace-path>") {
 			t.Fatalf("%s command use = %q, want to include <trace-path>", name, sub.Use)
 		}
+	}
+
+	runCmd, _, err := root.Find([]string{"run"})
+	if err != nil {
+		t.Fatalf("find run command: %v", err)
+	}
+	if !strings.Contains(runCmd.Use, "<command>") {
+		t.Fatalf("run command use = %q, want to include <command>", runCmd.Use)
 	}
 }
 
@@ -78,10 +88,85 @@ close(3) = 0
 	}
 }
 
+func TestRunCommandPassesArbitraryArgs(t *testing.T) {
+	resetFlagsForTest()
+
+	var got []string
+	runTrace = func(tracePath string, command []string) error {
+		got = append([]string(nil), command...)
+		return os.WriteFile(tracePath, []byte("openat(AT_FDCWD, \"/tmp/run-test.log\", O_RDONLY) = 3\nclose(3) = 0\n"), 0o644)
+	}
+
+	root := newRootCommand()
+	root.SetArgs([]string{"run", "echo", "--example-flag", "-n", "hello"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("run command failed: %v", err)
+	}
+
+	want := []string{"echo", "--example-flag", "-n", "hello"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("run command args = %#v, want %#v", got, want)
+	}
+}
+
+func TestRunCommandBubblesTraceErrors(t *testing.T) {
+	resetFlagsForTest()
+
+	runTrace = func(_ string, _ []string) error {
+		return errors.New("boom")
+	}
+
+	root := newRootCommand()
+	root.SetArgs([]string{"run", "echo", "hello"})
+	err := root.Execute()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "boom") {
+		t.Fatalf("error = %v, want to contain boom", err)
+	}
+}
+
+func TestRunCommandStripsLeadingDoubleDash(t *testing.T) {
+	resetFlagsForTest()
+
+	var got []string
+	runTrace = func(tracePath string, command []string) error {
+		got = append([]string(nil), command...)
+		return os.WriteFile(tracePath, []byte("openat(AT_FDCWD, \"/tmp/run-test.log\", O_RDONLY) = 3\nclose(3) = 0\n"), 0o644)
+	}
+
+	root := newRootCommand()
+	root.SetArgs([]string{"run", "--", "echo", "hello"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("run command failed: %v", err)
+	}
+
+	want := []string{"echo", "hello"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("run command args = %#v, want %#v", got, want)
+	}
+}
+
+func TestRunCommandRequiresCommandAfterDoubleDash(t *testing.T) {
+	resetFlagsForTest()
+
+	root := newRootCommand()
+	root.SetArgs([]string{"run", "--"})
+	err := root.Execute()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "requires a command") {
+		t.Fatalf("error = %v, want to mention missing command", err)
+	}
+}
+
 func resetFlagsForTest() {
 	top = 30
 	minBytes = 1
 	jsonOut = false
+	runTrace = runTraceCommand
 }
 
 func captureStdout(t *testing.T, fn func()) string {

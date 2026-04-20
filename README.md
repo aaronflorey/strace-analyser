@@ -68,9 +68,16 @@ Run a single section:
 strace-analyser files /path/to/trace-dir
 ```
 
+Run and analyze a command directly:
+
+```bash
+strace-analyser run -- curl -I https://example.com
+```
+
 ### Commands
 
 - `all <trace-path>`
+- `run <command> [args...]`
 - `files <trace-path>`
 - `network <trace-path>`
 - `locks <trace-path>`
