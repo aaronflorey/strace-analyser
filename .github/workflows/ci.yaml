@@ -30,4 +30,4 @@ jobs:
         run: go test ./... -count=1
 
       - name: CLI smoke test
-        run: go run . all ./files -n 5 --min-bytes 1024
+        run: go run . all ./testdata/ci-smoke.trace -n 5 --min-bytes 1024

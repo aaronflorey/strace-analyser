@@ -1,0 +1,8 @@
+openat(AT_FDCWD, "/tmp/data.bin", O_RDONLY) = 3 <0.000011>
+read(3, "...", 4096) = 4096 <0.000044>
+close(3) = 0 <0.000006>
+socket(AF_INET, SOCK_STREAM, IPPROTO_TCP) = 4 <0.000020>
+connect(4, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr("1.1.1.1")}, 16) = 0 <0.000095>
+sendto(4, "GET / HTTP/1.1\r\n\r\n", 18, 0, NULL, 0) = 18 <0.000031>
+recvfrom(4, "HTTP/1.1 200 OK", 15, 0, NULL, NULL) = 15 <0.000029>
+futex(0x7f0a2f3c0000, FUTEX_WAIT_PRIVATE, 2, NULL) = -1 EAGAIN (Resource temporarily unavailable) <0.000003>

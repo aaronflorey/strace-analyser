@@ -16,7 +16,7 @@ go mod download
 
 ```bash
 go run . --help
-go run . all ./files -n 5 --min-bytes 1024
+go run . all ./testdata/ci-smoke.trace -n 5 --min-bytes 1024
 ```
 
 ## Quality checks
@@ -37,7 +37,7 @@ go test ./...
 
 ## Trace fixture notes
 
-- Fixture traces live in `./files`.
+- Fixture traces live in `./testdata`.
 - For best parser coverage, capture traces with:
 
 ```bash
